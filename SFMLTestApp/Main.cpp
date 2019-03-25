@@ -2,6 +2,7 @@
 #include <SFML\System.hpp>
 #include <SFML\Window.hpp>
 #include <math.h>
+#include <vector>
 
 using namespace sf;
 
@@ -36,6 +37,9 @@ int main() {
 	player.setPosition((windowWidth/2) - playerRadius, (windowHeigth / 2) - playerRadius);
 	player.setFillColor(Color::Magenta);
 
+	Bullet bullet;
+	std::vector<Bullet> bullets;
+
 	while (window.isOpen())
 	{
 		Event event;
@@ -46,7 +50,24 @@ int main() {
 		}
 
 		playerCenter = Vector2f(player.getPosition().x + player.getRadius(), player.getPosition().y + player.getRadius());
-		
+		mousePositionWindow = Vector2f(Mouse::getPosition(window));
+		aimDirection = mousePositionWindow - playerCenter;
+		aimDirectionNormalise = aimDirection / sqrt(pow(aimDirection.x, 2) + pow(aimDirection.y, 2));
+
+		if (Mouse::isButtonPressed(Mouse::Left)) {
+			bullet.shape.setPosition(playerCenter);
+			bullet.currVelocity = aimDirectionNormalise * bullet.maxSpeed;
+			bullets.push_back(Bullet(bullet));
+		}
+
+		for (size_t i = 0; i < bullets.size(); i++) {
+			bullets[i].shape.move(bullets[i].currVelocity);
+
+			if (bullets[i].shape.getPosition().x < 0 || bullets[i].shape.getPosition().x > window.getSize().x
+				|| bullets[i].shape.getPosition().y < 0 || bullets[i].shape.getPosition().y > window.getSize().y)
+				bullets.erase(bullets.begin());
+		}
+
 
 		if (Keyboard::isKeyPressed(Keyboard::Left))
 			player.move(-10.f, 0.f);
@@ -61,7 +82,13 @@ int main() {
 
 		window.clear();
 		window.draw(player);
+
+		for (size_t i = 0; i < bullets.size(); i++) {
+			window.draw(bullets[i].shape);
+		}
 		window.display();
+
+		
 	}
 
 	return 0;
