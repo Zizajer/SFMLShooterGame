@@ -3,11 +3,13 @@
 #include <SFML\Window.hpp>
 #include <iostream>
 #include <cstdlib>
+#include <map>
 #include <ctime>
 #include <math.h>
 #include <vector>
 
 using namespace sf;
+using namespace std;
 
 class Bullet {
 public:
@@ -23,6 +25,15 @@ public:
 	}
 };
 
+class Enemy {
+public:
+	RectangleShape shape;
+	Enemy() {
+		this->shape.setFillColor(Color::White);
+		this->shape.setSize(Vector2f(50.f, 50.f));
+	}
+};
+
 int main() {
 	srand(time(NULL));
 	float windowWidth = 800.f;
@@ -34,7 +45,7 @@ int main() {
 	Vector2f aimDirection;
 	Vector2f aimDirectionNormalise;
 
-	float spawnMaxTime = 250;
+	float spawnMaxTime = 80;
 	float spawnTime = spawnMaxTime;
 
 	RenderWindow window(sf::VideoMode(windowWidth, windowHeigth), "Shooter Game");
@@ -45,9 +56,11 @@ int main() {
 	player.setFillColor(Color::Magenta);
 
 	Bullet bullet;
-	std::vector<Bullet> bullets;
+	vector<Bullet> bullets;
 
-	std::vector<RectangleShape> enemies;
+	Enemy enemy;
+	vector<Enemy> enemies;
+
 
 	while (window.isOpen())
 	{
@@ -79,15 +92,15 @@ int main() {
 			}
 			else {
 				for(size_t j = 0 ; j < enemies.size(); j++)
-					if (bullets[i].shape.getGlobalBounds().intersects(enemies[j].getGlobalBounds())) {
+					if (bullets[i].shape.getGlobalBounds().intersects(enemies[j].shape.getGlobalBounds())) {
 						bullets.erase(bullets.begin() + i);
 						enemies.erase(enemies.begin() + j);
 					}
 			}
 		}
 
-		float xCoordinateDifference = (((std::rand() % 400) - 200));
-		float yCoordinateDifference = (((std::rand() % 400) - 200));
+		float xCoordinateDifference = (((rand() % 400) - 200));
+		float yCoordinateDifference = (((rand() % 400) - 200));
 
 		if (50 > xCoordinateDifference < -50)
 			xCoordinateDifference = 50;
@@ -95,13 +108,9 @@ int main() {
 		if (50 > yCoordinateDifference < -50)
 			yCoordinateDifference = 50;
 
-		std::cout << "Koordynaty: " << xCoordinateDifference << std::endl;
-
 		if (spawnTime >= spawnMaxTime) {
-			RectangleShape enemy;
-			enemy.setPosition(playerCenter.x + xCoordinateDifference, playerCenter.y + yCoordinateDifference);
-			enemy.setFillColor(Color::White);
-			enemy.setSize(Vector2f(50.f, 50.f));
+			Enemy enemy;
+			enemy.shape.setPosition(playerCenter.x + xCoordinateDifference, playerCenter.y + yCoordinateDifference);
 			enemies.push_back(enemy);
 			spawnTime = 0;
 		}
@@ -118,8 +127,6 @@ int main() {
 		if (Keyboard::isKeyPressed(Keyboard::Up))
 			player.move(0.f, -10.f);
 
-
-
 		window.clear();
 		window.draw(player);
 
@@ -128,7 +135,7 @@ int main() {
 		}
 
 		for (size_t i = 0; i < enemies.size(); i++) {
-			window.draw(enemies[i]);
+			window.draw(enemies[i].shape);
 		}
 
 		window.display();
