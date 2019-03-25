@@ -74,7 +74,16 @@ int main() {
 
 			if (bullets[i].shape.getPosition().x < 0 || bullets[i].shape.getPosition().x > window.getSize().x
 				|| bullets[i].shape.getPosition().y < 0 || bullets[i].shape.getPosition().y > window.getSize().y)
-				bullets.erase(bullets.begin());
+			{
+				bullets.erase(bullets.begin() + i);
+			}
+			else {
+				for(size_t j = 0 ; j < enemies.size(); j++)
+					if (bullets[i].shape.getGlobalBounds().intersects(enemies[j].getGlobalBounds())) {
+						bullets.erase(bullets.begin() + i);
+						enemies.erase(enemies.begin() + j);
+					}
+			}
 		}
 
 		float xCoordinateDifference = (((std::rand() % 400) - 200));
