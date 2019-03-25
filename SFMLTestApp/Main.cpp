@@ -1,6 +1,9 @@
 #include <sfml\Graphics.hpp>
 #include <SFML\System.hpp>
 #include <SFML\Window.hpp>
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
 #include <math.h>
 #include <vector>
 
@@ -21,6 +24,7 @@ public:
 };
 
 int main() {
+	srand(time(NULL));
 	float windowWidth = 800.f;
 	float windowHeigth = 600.f;
 	float playerRadius = 25.f;
@@ -29,6 +33,9 @@ int main() {
 	Vector2f mousePositionWindow;
 	Vector2f aimDirection;
 	Vector2f aimDirectionNormalise;
+
+	float spawnMaxTime = 250;
+	float spawnTime = spawnMaxTime;
 
 	RenderWindow window(sf::VideoMode(windowWidth, windowHeigth), "Shooter Game");
 	window.setFramerateLimit(60);
@@ -39,6 +46,8 @@ int main() {
 
 	Bullet bullet;
 	std::vector<Bullet> bullets;
+
+	std::vector<RectangleShape> enemies;
 
 	while (window.isOpen())
 	{
@@ -68,6 +77,28 @@ int main() {
 				bullets.erase(bullets.begin());
 		}
 
+		float xCoordinateDifference = (((std::rand() % 400) - 200));
+		float yCoordinateDifference = (((std::rand() % 400) - 200));
+
+		if (50 > xCoordinateDifference < -50)
+			xCoordinateDifference = 50;
+
+		if (50 > yCoordinateDifference < -50)
+			yCoordinateDifference = 50;
+
+		std::cout << "Koordynaty: " << xCoordinateDifference << std::endl;
+
+		if (spawnTime >= spawnMaxTime) {
+			RectangleShape enemy;
+			enemy.setPosition(playerCenter.x + xCoordinateDifference, playerCenter.y + yCoordinateDifference);
+			enemy.setFillColor(Color::White);
+			enemy.setSize(Vector2f(50.f, 50.f));
+			enemies.push_back(enemy);
+			spawnTime = 0;
+		}
+		else {
+			spawnTime++;
+		}
 
 		if (Keyboard::isKeyPressed(Keyboard::Left))
 			player.move(-10.f, 0.f);
@@ -86,6 +117,11 @@ int main() {
 		for (size_t i = 0; i < bullets.size(); i++) {
 			window.draw(bullets[i].shape);
 		}
+
+		for (size_t i = 0; i < enemies.size(); i++) {
+			window.draw(enemies[i]);
+		}
+
 		window.display();
 
 		
