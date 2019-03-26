@@ -16,23 +16,30 @@ public:
 	CircleShape shape;
 	Vector2f currVelocity;
 	float maxSpeed;
+	Color color;
 
-	Bullet(float radius = 5.f)
+	Bullet(Color color , float radius = 5.f)
 		: currVelocity(0.f, 0.f), maxSpeed(15.f)
 	{
 		this->shape.setRadius(radius);
-		this->shape.setFillColor(Color::Red);
+		this->shape.setFillColor(color);
 	}
 };
 
 class Enemy {
 public:
 	RectangleShape shape;
-	Enemy() {
+	float lastShooted;
+	Enemy() : lastShooted(0.f) {
 		this->shape.setFillColor(Color::White);
 		this->shape.setSize(Vector2f(50.f, 50.f));
 	}
 };
+
+
+Vector2f getNormalisedVector(Vector2f vector) {
+	return vector / sqrt(pow(vector.x, 2) + pow(vector.y, 2));
+}
 
 int main() {
 	srand(time(NULL));
@@ -43,7 +50,7 @@ int main() {
 	Vector2f playerCenter;
 	Vector2f mousePositionWindow;
 	Vector2f aimDirection;
-	Vector2f aimDirectionNormalise;
+	Vector2f enemyAimDirection;
 
 	float spawnMaxTime = 80;
 	float spawnTime = spawnMaxTime;
@@ -55,7 +62,8 @@ int main() {
 	player.setPosition((windowWidth/2) - playerRadius, (windowHeigth / 2) - playerRadius);
 	player.setFillColor(Color::Magenta);
 
-	Bullet bullet;
+	Bullet enemyBullet(Color::White);
+	Bullet playerBullet(Color::Magenta);
 	vector<Bullet> bullets;
 
 	Enemy enemy;
@@ -74,12 +82,23 @@ int main() {
 		playerCenter = Vector2f(player.getPosition().x + player.getRadius(), player.getPosition().y + player.getRadius());
 		mousePositionWindow = Vector2f(Mouse::getPosition(window));
 		aimDirection = mousePositionWindow - playerCenter;
-		aimDirectionNormalise = aimDirection / sqrt(pow(aimDirection.x, 2) + pow(aimDirection.y, 2));
 
 		if (Mouse::isButtonPressed(Mouse::Left)) {
-			bullet.shape.setPosition(playerCenter);
-			bullet.currVelocity = aimDirectionNormalise * bullet.maxSpeed;
-			bullets.push_back(Bullet(bullet));
+			playerBullet.shape.setPosition(playerCenter);
+			playerBullet.currVelocity = getNormalisedVector(aimDirection) * playerBullet.maxSpeed;
+			bullets.push_back(Bullet(playerBullet));
+		}
+
+		for (size_t i = 0; i < enemies.size(); i++) {
+			if (enemies[i].lastShooted == 20) {
+				enemyBullet.shape.setPosition(enemies[i].shape.getPosition());
+				enemyAimDirection = playerCenter - enemies[i].shape.getPosition();
+				enemyBullet.currVelocity = getNormalisedVector(enemyAimDirection) * enemyBullet.maxSpeed;
+				bullets.push_back(Bullet(enemyBullet));
+				enemies[i].lastShooted == 0;
+			}
+			else
+				enemies[i].lastShooted++;
 		}
 
 		for (size_t i = 0; i < bullets.size(); i++) {
@@ -91,11 +110,12 @@ int main() {
 				bullets.erase(bullets.begin() + i);
 			}
 			else {
-				for(size_t j = 0 ; j < enemies.size(); j++)
+				for (size_t j = 0; j < enemies.size(); j++) {
 					if (bullets[i].shape.getGlobalBounds().intersects(enemies[j].shape.getGlobalBounds())) {
 						bullets.erase(bullets.begin() + i);
 						enemies.erase(enemies.begin() + j);
 					}
+				}
 			}
 		}
 
